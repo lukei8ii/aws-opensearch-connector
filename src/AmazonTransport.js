@@ -24,9 +24,15 @@ module.exports = awsConfig => {
       }
 
       // Callback support
-      awaitAwsCredentials(awsConfig)
-        .then(() => super.request(params, options, callback))
-        .catch(callback)
+      // Removed .then() chain due to a bug https://github.com/opensearch-project/opensearch-js/issues/185
+      // .then() was calling then (onFulfilled, onRejected) on transportReturn, resulting in a null value exception
+      awaitAwsCredentials(awsConfig).then();
+
+      try {
+          super.request(params, options, callback);
+      } catch (err) {
+          callback(err, { body: null });
+      }
     }
   }
 
